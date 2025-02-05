@@ -45,18 +45,18 @@ INSTALLED_APPS = [
     'rest_framework',
     'Movie',
     'Theatre',
-    'corsheaders'
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # ✅ Fix: Correct package name
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheader.middleware.Corsmiddleware'
 ]
 
 ROOT_URLCONF = 'movie_reservation.urls'

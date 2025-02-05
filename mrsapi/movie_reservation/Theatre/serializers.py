@@ -4,4 +4,4 @@ from Theatre.models import TheatreDirectory
 class TheatreDirectorySerializer(serializers.ModelSerializer):
     class Meta:
         model=TheatreDirectory
-        feilds=['__all__']
+        fields='__all__'
