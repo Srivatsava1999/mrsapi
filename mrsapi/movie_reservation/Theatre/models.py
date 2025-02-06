@@ -10,3 +10,24 @@ class TheatreDirectory(models.Model):
 
     def __str__(self):
         return self.theatreName
+    
+
+class ScreenDirectory(models.Model):
+    screenId=models.AutoField(primary_key=True)
+    DateTime=models.DateTimeField()
+    screenNum=models.IntegerField()
+    capacity=models.IntegerField()
+    theatreId=models.ForeignKey(TheatreDirectory, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.screenId
+
+class SeatMaster(models.Model):
+    SeatId=models.AutoField(primary_key=True)
+    SeatName=models.CharField(max_length=10)
+    SeatClass=models.CharField(max_length=75)
+    SeatPrice=models.IntegerField()
+    screenId=models.ForeignKey(ScreenDirectory, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.SeatName
