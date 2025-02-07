@@ -14,13 +14,12 @@ class TheatreDirectory(models.Model):
 
 class ScreenDirectory(models.Model):
     screenId=models.AutoField(primary_key=True)
-    DateTime=models.DateTimeField()
     screenNum=models.IntegerField()
     capacity=models.IntegerField()
     theatreId=models.ForeignKey(TheatreDirectory, on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.screenId
+        return f"Screen {self.screenNum} - Theatre {self.theatreId.theatreName}"
 
 class SeatMaster(models.Model):
     SeatId=models.AutoField(primary_key=True)
