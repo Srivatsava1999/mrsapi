@@ -51,7 +51,9 @@ class ScreenList(APIView):
         serializer=ScreenDirectorySerializer(screens, many=True)
         return Response(serializer.data)
     def post(self, request, format=None):
-        serializer=ScreenDirectorySerializer(data=request.data)
+        data=request.data.copy()
+        data[theatreId]=int(fk)
+        serializer=ScreenDirectorySerializer(data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
