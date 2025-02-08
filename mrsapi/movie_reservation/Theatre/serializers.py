@@ -7,13 +7,13 @@ class TheatreDirectorySerializer(serializers.ModelSerializer):
         fields='__all__'
 
 class ScreenDirectorySerializer(serializers.ModelSerializer):
+    theatreId = serializers.PrimaryKeyRelatedField(queryset=TheatreDirectory.objects.all())
     class Meta:
         model=ScreenDirectory
         fields='__all__'
-        depth=1
 
 class SeatMasterSerializer(serializers.ModelSerializer):
+    screenId=serializers.PrimaryKeyRelatedField(queryset=ScreenDirectory.objects.all())
     class Meta:
         model=SeatMaster
         fields='__all__'
-        depth=1

@@ -50,13 +50,13 @@ class ScreenList(APIView):
         screens=ScreenDirectory.objects.filter(theatreId=fk)
         serializer=ScreenDirectorySerializer(screens, many=True)
         return Response(serializer.data)
-    def post(self, request, format=None):
-        data=request.data.copy()
-        data[theatreId]=int(fk)
-        serializer=ScreenDirectorySerializer(data)
+    def post(self, request, fk,format=None):
+        # print(data)
+        serializer=ScreenDirectorySerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
+        print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class ScreenDetail(APIView):
@@ -66,18 +66,18 @@ class ScreenDetail(APIView):
         except ScreenDirectory.DoesNotExist:
             raise Http404
     
-    def get(self, request, pk, format=None):
+    def get(self, request, pk, fk, format=None):
         screen=self.get_screen(pk)
         serializer=ScreenDirectorySerializer(screen)
         return Response(serializer.data)
-    def put(self, request, pk, format=None):
+    def put(self, request, pk,fk, format=None):
         screen=self.get_screen(pk)
         serializer=ScreenDirectorySerializer(screen, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(status=status.HTTP_400_BAD_REQUEST)
-    def delete(self,request,pk,format=None):
+    def delete(self,request,pk,fk,format=None):
         screen=self.get_screen(pk)
         screen.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
