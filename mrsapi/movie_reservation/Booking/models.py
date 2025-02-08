@@ -16,6 +16,7 @@ class C_ShowType(models.Model):
     def showType(self):
         # return self.SHOWTYPES[self.showTypeId]
         return self.SHOWTYPES.get(self.showTypeId, "unkown")
+    # The @property file makes it so that the function acts as an attribute, so C_ShowType.showType is an attribute of the class.
     
     def __str__(self):
         return self.showType

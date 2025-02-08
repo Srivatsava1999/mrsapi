@@ -27,6 +27,8 @@ urlpatterns = [
     path('theatres/',TheatreViews.TheatreList.as_view()),
     path('theatres/<int:pk>/',TheatreViews.TheatreDetail.as_view()),
     path('theatre/<int:fk>/screen/', TheatreViews.ScreenList.as_view()),
-    path('theatre/<int:fk>/screen/<int:pk>/',TheatreViews.ScreenDetail.as_view())
+    path('theatre/<int:fk>/screen/<int:pk>/',TheatreViews.ScreenDetail.as_view()),
+    path('screen/<int:fk>/seats/',TheatreViews.SeatList.as_view()),
+    path('screen/<int:fk>/seats/<int:pk>',TheatreViews.SeatDetail.as_view())
 ]
 urlpatterns=format_suffix_patterns(urlpatterns)
