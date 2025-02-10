@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.db import transaction, IntegrityError
+from django.core.cache import cache
 from django.http import Http404
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -87,6 +88,9 @@ class ScreenDetail(APIView):
     
 class SeatList(APIView):
     def get(self, request, fk, format=None):
+        seat_layout=cache.get(f"screen_{fk}")
+        if seat_layout:
+            return Response({"screenId": fk, "seat_layout": seat_layout}, status=status.HTTP_200_OK)
         seats=SeatMaster.objects.filter(screenId=fk)
         serializer=SeatMasterSerializer(seats, many=True)
         return Response(serializer.data)
@@ -111,12 +115,13 @@ class SeatList(APIView):
 
             # Create SeatMaster compatible list
         seatmaster_objects = []
+        seatLayoutDict={}
 
         for i, row in enumerate(seatnums):
             row_label = chr(65 + i)  # Convert row index to letter (A, B, C, ...)
             price = 40 if i < premium_rows else 30
             seat_type = 2 if price == 40 else 1  # Assign seat type based on price
-
+            seatLayoutDict[row_label]=row
             for col_num in row:
                 seatmaster_objects.append(
                     SeatMaster(
@@ -132,8 +137,9 @@ class SeatList(APIView):
         try:
             with transaction.atomic():
                 SeatMaster.objects.bulk_create(seatmaster_objects)
+                cache.set(f"screen_{screenId}",seatLayoutDict, timeout=None)
             return Response(
-                {"message":"Seats Created!!", "screenId":screenId},
+                {"message":"Seats Created!!", "screenId":screenId, "cached": True},
                 status=status.HTTP_201_CREATED)
         except IntegrityError as e:
             return Response(
