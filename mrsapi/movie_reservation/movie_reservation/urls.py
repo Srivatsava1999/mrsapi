@@ -19,6 +19,7 @@ from django.urls import path
 from rest_framework.urlpatterns import format_suffix_patterns
 from Movie import views as MovieViews
 from Theatre import views as TheatreViews
+from Booking import views as BookingViews
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -29,6 +30,10 @@ urlpatterns = [
     path('theatre/<int:fk>/screen/', TheatreViews.ScreenList.as_view()),
     path('theatre/<int:fk>/screen/<int:pk>/',TheatreViews.ScreenDetail.as_view()),
     path('screen/<int:fk>/seats/',TheatreViews.SeatList.as_view()),
-    path('screen/<int:fk>/seats/<int:pk>',TheatreViews.SeatDetail.as_view())
+    path('screen/<int:fk>/seats/<int:pk>',TheatreViews.SeatDetail.as_view()),
+    path('theatre/<int:fk>/show/', BookingViews.ShowList.as_view()), # Bulk GET or POST Request if the request shows by theatre
+    path('movie/<int:fk>/show/', BookingViews.ShowList.as_view()), # Bulk GET or POST Request if the request shows by movie
+    path('theatre/<int:fk>/show/<int:pk>/', BookingViews.ShowDetail.as_view()), # Specific GET or PUT or DELETE Request if the request shows by theatre
+    path('movie/<int:fk>/show/<int:pk>/',BookingViews.ShowDetail.as_view()) # Specific GET or PUT or DELETE Request if the request shows by movie
 ]
 urlpatterns=format_suffix_patterns(urlpatterns)
