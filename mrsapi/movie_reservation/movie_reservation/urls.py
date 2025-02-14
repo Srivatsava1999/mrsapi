@@ -31,7 +31,7 @@ urlpatterns = [
     path('theatre/<int:fk>/screen/<int:pk>/',TheatreViews.ScreenDetail.as_view()),
     path('screen/<int:fk>/seats/',TheatreViews.SeatList.as_view()),
     path('screen/<int:fk>/seats/<int:pk>',TheatreViews.SeatDetail.as_view()),
-    path('theatre/<int:fk>/show/', BookingViews.ShowList.as_view()), # Bulk GET or POST Request if the request shows by theatre
+    path('theatre/<int:fk>/show/', BookingViews.ShowList.as_view()), # Bulk GET or POST(showschedularservice running) Request if the request shows by theatre
     path('movie/<int:fk>/show/', BookingViews.ShowList.as_view()), # Bulk GET or POST Request if the request shows by movie
     path('theatre/<int:fk>/show/<int:pk>/', BookingViews.ShowDetail.as_view()), # Specific GET or PUT or DELETE Request if the request shows by theatre
     path('movie/<int:fk>/show/<int:pk>/',BookingViews.ShowDetail.as_view()) # Specific GET or PUT or DELETE Request if the request shows by movie
