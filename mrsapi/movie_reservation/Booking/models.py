@@ -1,4 +1,5 @@
-from django.db import models
+from django.db import models, IntegrityError
+from django.utils.timezone import now
 from Movie.models import MovieDirectory
 from Theatre.models import TheatreDirectory, ScreenDirectory, SeatMaster
 
