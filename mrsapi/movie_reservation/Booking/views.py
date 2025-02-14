@@ -10,6 +10,7 @@ from Booking.serializers import ShowDirectorySerializer, BookingDirectorySeriali
 from Theatre.models import ScreenDirectory, TheatreDirectory, SeatMaster, C_SeatType
 from Movie.models import MovieDirectory
 from datetime import datetime, timedelta, time
+from django.utils.timezone import make_aware
 
 # Create your views here.
 
@@ -34,6 +35,7 @@ class ShowList(APIView):
         
         try:
             release_date=datetime.strptime(release_date, "%Y-%m-%d").date()
+            release_date=make_aware(datetime.combine(release_date, datetime.min.time()))
             movie=MovieDirectory.objects.get(movieId=movie_id)
             runtime_minutes=int(movie.duration)
             movie_duration=timedelta(minutes=runtime_minutes)
