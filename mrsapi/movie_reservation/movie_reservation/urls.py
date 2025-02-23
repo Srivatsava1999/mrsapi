@@ -20,6 +20,7 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from Movie import views as MovieViews
 from Theatre import views as TheatreViews
 from Booking import views as BookingViews
+from Users import views as UserViews
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -34,6 +35,10 @@ urlpatterns = [
     path('theatre/<int:fk>/show/', BookingViews.ShowList.as_view()), # Bulk GET or POST(showschedularservice running) Request if the request shows by theatre
     path('movie/<int:fk>/show/', BookingViews.ShowList.as_view()), # Bulk GET or POST Request if the request shows by movie
     path('theatre/<int:fk>/show/<int:pk>/', BookingViews.ShowDetail.as_view()), # Specific GET or PUT or DELETE Request if the request shows by theatre
-    path('movie/<int:fk>/show/<int:pk>/',BookingViews.ShowDetail.as_view()) # Specific GET or PUT or DELETE Request if the request shows by movie
+    path('movie/<int:fk>/show/<int:pk>/',BookingViews.ShowDetail.as_view()), # Specific GET or PUT or DELETE Request if the request shows by movie
+    path('register/', UserViews.RegisterView.as_view()),
+    path('login/', UserViews.LoginView.as_view()),
+    path('oauth2-login/', UserViews.OAuth2SignupView.as_view()),
+    
 ]
 urlpatterns=format_suffix_patterns(urlpatterns)
