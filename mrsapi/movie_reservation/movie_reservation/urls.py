@@ -40,6 +40,5 @@ urlpatterns = [
     path('login/', UserViews.LoginView.as_view()),
     path('oauth2-login/', UserViews.OAuth2SignupView.as_view()),
     path('auth/', include('social_django.urls', namespace='social')),
-    
 ]
 urlpatterns=format_suffix_patterns(urlpatterns)

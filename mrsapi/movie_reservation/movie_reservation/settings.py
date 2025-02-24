@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'Users',
 ]
 
+
 REST_FRAMEWORK={
     'DEFAULT_AUTHENTICATION_CLASSES':(
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -68,7 +69,6 @@ AUTHENTICATION_BACKENDS=[
     'social_core.backends.google.GoogleOAuth2',
     'django.contrib.auth.backends.ModelBackend',
 ]
-
 
 AUTH_USER_MODEL = 'Users.UserAccount'
 

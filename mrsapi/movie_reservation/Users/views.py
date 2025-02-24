@@ -82,5 +82,3 @@ class OAuth2SignupView(APIView):
                 "email":user_obj.email
             })
         return Response({"error":"Invalid OAuth2 token"}, status=400)
-
-    
