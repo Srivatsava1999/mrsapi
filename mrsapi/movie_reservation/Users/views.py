@@ -53,7 +53,7 @@ class RegisterView(generics.CreateAPIView):
     
 class OAuth2SignupView(APIView):
     permission_classes=[AllowAny]
-    @psa('social:complete')
+    # @psa('social:complete')
     def post(self, request, *args, **kwargs):
         backend_name=request.data.get('backend')
         access_token=request.data.get('access_token')
@@ -69,7 +69,7 @@ class OAuth2SignupView(APIView):
             user_obj,_= UserAccount.objects.get_or_create(
                 email=user.email,
                 defaults={
-                    "name": user.get('name', ''),
+                    "name": user.name if hasattr(user, 'name') else "",
                     "role": UserAccount.CUSTOMER,
                     "is_active": True
                 }
