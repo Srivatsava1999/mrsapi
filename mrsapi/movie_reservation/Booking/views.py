@@ -11,15 +11,19 @@ from Theatre.models import ScreenDirectory, TheatreDirectory, SeatMaster, C_Seat
 from Movie.models import MovieDirectory
 from datetime import datetime, timedelta, time
 from django.utils.timezone import make_aware
-
+from Users.models import UserAccount
 # Create your views here.
 
 class ShowList(APIView):
     def get(self, request, fk, format=None):
+        user=request.user
         if "movie" in request.path:
             shows=ShowDirectory.objects.filter(movieId=fk)
         elif "theatre" in request.path:
-            shows=ShowDirectory.objects.filter(theatreId=fk)
+            if user.role==UserAccount.ADMIN:
+                shows=ShowDirectory.objects.filter(theatreId=fk)
+            else:
+                shows=ShowDirectory.objects.filter(theatreId=fk, theatreId_owner=user)
         serializers=ShowDirectorySerializer(shows, many=True)
         return Response(serializers.data, status=status.HTTP_200_OK)
     
@@ -83,14 +87,17 @@ class ShowList(APIView):
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class ShowDetail(APIView):
-    def get_show(self, pk):
+    def get_show(self, pk, user):
         try:
-            return ShowDirectory.objects.get(showId=pk)
+            show=ShowDirectory.objects.get(showId=pk)
+            if user.role==UserAccount.ADMIN or show.theatreId.owner==user:
+                return show
+            raise Http404
         except:
             raise Http404
     
     def get(self, request, fk, pk, format=None):
-        show=self.get_show(pk=pk)
+        show=self.get_show(pk, request.user)
         serializers=ShowDirectorySerializer(show)
         return Response(serializers.data, status=status.HTTP_202_ACCEPTED)
     
@@ -109,7 +116,11 @@ class ShowDetail(APIView):
     
 class BookingList(APIView):
     def get(self, request, format=None):
-        bookings=BookingDirectory.objects.all()
+        user=request.user
+        if user.role==UserAccount.ADMIN:
+            bookings=BookingDirectory.objects.all()
+        else:
+            bookings=BookingDirectory.objects.filter(showId_theatreId_owner=user)
         serializers=BookingDirectorySerializer(bookings, many=True)
         return Response(serializers.data, status=status.HTTP_202_ACCEPTED)
     
@@ -121,20 +132,23 @@ class BookingList(APIView):
         return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class BookingDetail(APIView):
-    def get_booking(self, pk):
+    def get_booking(self, pk, user):
         try:
-            return BookingDirectory.objects.get(bookingId=pk)
+            booking=BookingDirectory.objects.get(bookingId=pk)
+            if user.role==UserAccount.ADMIN or booking.showId.theatreId.owner==user:
+                return booking
+            raise Http404
         except:
             raise Http404
     
 
     def get(self, request, pk, format=None):
-        booking=self.get_booking(pk=pk)
+        booking=self.get_booking(pk, request.user)
         serializers=BookingDirectorySerializer(booking)
         return Response(serializers.data, status=status.HTTP_202_ACCEPTED)
     
     def put(self, request, pk, format=None):
-        booking=self.get_booking(pk=pk)
+        booking=self.get_booking(pk, request.user)
         serializers=BookingDirectorySerializer(booking, data=request.data)
         if serializers.is_valid():
             serializers.save()

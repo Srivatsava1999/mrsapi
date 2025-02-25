@@ -1,4 +1,5 @@
 from django.db import models
+from Users.models import UserAccount
 
 # Create your models here.
 class C_SeatType(models.Model):
@@ -21,6 +22,7 @@ class TheatreDirectory(models.Model):
     address=models.CharField(max_length=100)
     locationCity=models.CharField(max_length=75)
     locationState=models.CharField(max_length=75)
+    owner=models.ForeignKey(UserAccount, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.theatreName

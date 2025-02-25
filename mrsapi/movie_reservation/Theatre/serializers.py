@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from Theatre.models import TheatreDirectory,ScreenDirectory,SeatMaster,C_SeatType
+from Users.models import UserAccount
 
 class C_SeatTypeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -7,6 +8,7 @@ class C_SeatTypeSerializer(serializers.ModelSerializer):
         fields='__all__'
 
 class TheatreDirectorySerializer(serializers.ModelSerializer):
+    owner=serializers.PrimaryKeyRelatedField(queryset=UserAccount.objects.all())
     class Meta:
         model=TheatreDirectory
         fields='__all__'

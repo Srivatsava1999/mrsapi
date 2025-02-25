@@ -7,35 +7,46 @@ from rest_framework.views import APIView
 from rest_framework import status
 from Theatre.models import TheatreDirectory, ScreenDirectory, SeatMaster
 from Theatre.serializers import TheatreDirectorySerializer, ScreenDirectorySerializer, SeatMasterSerializer
+from Users.models import UserAccount
 
 # Create your views here.
 class TheatreList(APIView):    
     def get(self, request, format=None):
-        theatres=TheatreDirectory.objects.all()
+        user=request.user
+        if user.role == UserAccount.ADMIN:
+            theatres=TheatreDirectory.objects.all()
+        else:
+            theatres=TheatreDirectory.objects.filter(owner=user)
         serializer=TheatreDirectorySerializer(theatres, many=True)
         return Response(serializer.data)
     
     def post(self, request, format=None):
+        user=request.user
+        if user.role != UserAccount.ENTERPRISE or user.role!=UserAccount.ADMIN:
+            return Response({"error":"Customers can't create theatres"})
         serializer=TheatreDirectorySerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(owner=user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class TheatreDetail(APIView):
-    def get_theatre(self, pk):
+    def get_theatre(self, pk, user):
         try:
-            return TheatreDirectory.objects.get(theatreId=pk)
+            if user.role == UserAccount.ADMIN:
+                return TheatreDirectory.objects.get(theatreId=pk)
+            else:
+                return TheatreDirectory.objects.get(theatreId=pk,owner=user)
         except TheatreDirectory.DoesNotExist:
             raise Http404
     
     def get(self, request, pk, format=None):
-        theatre=self.get_theatre(pk)
+        theatre=self.get_theatre(pk, request.user)
         serializer=TheatreDirectorySerializer(theatre)
         return Response(serializer.data)
     
     def put(self, request, pk, format=None):
-        theatre=self.get_theatre(pk)
+        theatre=self.get_theatre(pk, request.user)
         serializer=TheatreDirectorySerializer(theatre, data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -43,16 +54,23 @@ class TheatreDetail(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request, pk, format=None):
-        theatre=self.get_theatre(pk)
+        theatre=self.get_theatre(pk, request.user)
         theatre.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 class ScreenList(APIView):
     def get(self, request, fk, format=None):
-        screens=ScreenDirectory.objects.filter(theatreId=fk)
+        user=request.user
+        if user.role==UserAccount.ADMIN:
+            screens=ScreenDirectory.objects.filter(theatreId=fk)
+        else:
+            screens=ScreenDirectory.objects.filter(theatreId=fk, theatreId__owner=user)
         serializer=ScreenDirectorySerializer(screens, many=True)
         return Response(serializer.data)
     def post(self, request, fk,format=None):
+        user=request.user
+        if user.role!=UserAccount.ENTERPRISE or user.role!=UserAccount.ADMIN:
+            return Response({"error":"Customers can't create screens"}, status=status.HTTP_403_FORBIDDEN)
         serializer=ScreenDirectorySerializer(data=request.data)
         if serializer.is_valid():
             screenInstance=serializer.save()
@@ -64,25 +82,27 @@ class ScreenList(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class ScreenDetail(APIView):
-    def get_screen(self, pk):
+    def get_screen(self, pk, user):
         try:
-            return ScreenDirectory.objects.get(screenId=pk)
+            if user.role==UserAccount.ADMIN:
+                return ScreenDirectory.objects.get(screenId=pk)
+            return ScreenDirectory.objects.get(screenId=pk, theatreId__owner=user)
         except ScreenDirectory.DoesNotExist:
             raise Http404
     
     def get(self, request, pk, fk, format=None):
-        screen=self.get_screen(pk)
+        screen=self.get_screen(pk, request.user)
         serializer=ScreenDirectorySerializer(screen)
         return Response(serializer.data)
     def put(self, request, pk,fk, format=None):
-        screen=self.get_screen(pk)
+        screen=self.get_screen(pk, request.user)
         serializer=ScreenDirectorySerializer(screen, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(status=status.HTTP_400_BAD_REQUEST)
     def delete(self,request,pk,fk,format=None):
-        screen=self.get_screen(pk)
+        screen=self.get_screen(pk, request.user)
         screen.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
     
