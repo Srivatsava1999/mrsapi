@@ -16,14 +16,10 @@ from Users.models import UserAccount
 
 class ShowList(APIView):
     def get(self, request, fk, format=None):
-        user=request.user
         if "movie" in request.path:
             shows=ShowDirectory.objects.filter(movieId=fk)
         elif "theatre" in request.path:
-            if user.role==UserAccount.ADMIN:
-                shows=ShowDirectory.objects.filter(theatreId=fk)
-            else:
-                shows=ShowDirectory.objects.filter(theatreId=fk, theatreId_owner=user)
+            shows=ShowDirectory.objects.filter(theatreId=fk)
         serializers=ShowDirectorySerializer(shows, many=True)
         return Response(serializers.data, status=status.HTTP_200_OK)
     
@@ -33,61 +29,63 @@ class ShowList(APIView):
         theatre_id=data.get("theatreId")
         release_date=data.get("releaseDate")
         show_types=data.get("showTypes",[])
-
-        if not all([movie_id, theatre_id, release_date, show_types]):
-            return Response({"error":"Missing required fields"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        try:
-            release_date=datetime.strptime(release_date, "%Y-%m-%d").date()
-            release_date=make_aware(datetime.combine(release_date, datetime.min.time()))
-            movie=MovieDirectory.objects.get(movieId=movie_id)
-            runtime_minutes=int(movie.duration)
-            movie_duration=timedelta(minutes=runtime_minutes)
-            unavailable_screens = ShowDirectory.objects.filter(dateTime=release_date).values_list('screenId_id', flat=True)
-
-            available_screens=ScreenDirectory.objects.filter(theatreId=theatre_id).exclude(
-                screenId__in=unavailable_screens
-            )
-            if not available_screens.exists():
-                return Response({"error":"No available screens for scheduling"},status=status.HTTP_400_BAD_REQUEST)
+        if data.user.role!=UserAccount.CUSTOMER:
+            if not all([movie_id, theatre_id, release_date, show_types]):
+                return Response({"error":"Missing required fields"}, status=status.HTTP_400_BAD_REQUEST)
             
-            initia_time=time(9,0)
-            buffer_time=timedelta(minutes=15)
+            try:
+                release_date=datetime.strptime(release_date, "%Y-%m-%d").date()
+                release_date=make_aware(datetime.combine(release_date, datetime.min.time()))
+                movie=MovieDirectory.objects.get(movieId=movie_id)
+                runtime_minutes=int(movie.duration)
+                movie_duration=timedelta(minutes=runtime_minutes)
+                unavailable_screens = ShowDirectory.objects.filter(dateTime=release_date).values_list('screenId_id', flat=True)
 
-            new_shows=[]
-            current_time=datetime.combine(datetime.today(), initia_time)
-            for show_type_id in show_types:
-                start_time=current_time.time()
-                end_time=(current_time+movie_duration).time()
-
-                if end_time>=time(23,50):
-                    break
-
-                new_show=ShowDirectory(
-                    movieId_id=movie_id,
-                    screenId=available_screens[0],
-                    theatreId_id=theatre_id,
-                    showTypeId_id=show_type_id,
-                    startTime=start_time,
-                    endTime=end_time,
-                    dateTime=release_date,
-                    houseFullFlag=False
+                available_screens=ScreenDirectory.objects.filter(theatreId=theatre_id).exclude(
+                    screenId__in=unavailable_screens
                 )
-                new_shows.append(new_show)
-                current_time+=movie_duration+buffer_time
+                if not available_screens.exists():
+                    return Response({"error":"No available screens for scheduling"},status=status.HTTP_400_BAD_REQUEST)
+                
+                initia_time=time(9,0)
+                buffer_time=timedelta(minutes=15)
+
+                new_shows=[]
+                current_time=datetime.combine(datetime.today(), initia_time)
+                for show_type_id in show_types:
+                    start_time=current_time.time()
+                    end_time=(current_time+movie_duration).time()
+
+                    if end_time>=time(23,50):
+                        break
+
+                    new_show=ShowDirectory(
+                        movieId_id=movie_id,
+                        screenId=available_screens[0],
+                        theatreId_id=theatre_id,
+                        showTypeId_id=show_type_id,
+                        startTime=start_time,
+                        endTime=end_time,
+                        dateTime=release_date,
+                        houseFullFlag=False
+                    )
+                    new_shows.append(new_show)
+                    current_time+=movie_duration+buffer_time
+                
+                with transaction.atomic():
+                    ShowDirectory.objects.bulk_create(new_shows)
+                
+                return Response({"message": "Shows scheduled successfully"}, status=status.HTTP_201_CREATED)
             
-            with transaction.atomic():
-                ShowDirectory.objects.bulk_create(new_shows)
-            
-            return Response({"message": "Shows scheduled successfully"}, status=status.HTTP_201_CREATED)
-        
-        except MovieDirectory.DoesNotExist:
-            return Response({"error":"Movie not found"}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            except MovieDirectory.DoesNotExist:
+                return Response({"error":"Movie not found"}, status=status.HTTP_404_NOT_FOUND)
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        else:
+            return Response({"error":"Customers can't write shows"}, status=status.HTTP_403_FORBIDDEN)
 
 class ShowDetail(APIView):
-    def get_show(self, pk, user):
+    def write_show(self, pk, user):
         try:
             show=ShowDirectory.objects.get(showId=pk)
             if user.role==UserAccount.ADMIN or show.theatreId.owner==user:
@@ -95,14 +93,19 @@ class ShowDetail(APIView):
             raise Http404
         except:
             raise Http404
+    def read_show(self, pk):
+        try:
+            return ShowDirectory.objects.get(showId=pk)
+        except ShowDirectory.DoesNotExist:
+            raise Http404
     
     def get(self, request, fk, pk, format=None):
-        show=self.get_show(pk, request.user)
+        show=self.read_show(pk)
         serializers=ShowDirectorySerializer(show)
         return Response(serializers.data, status=status.HTTP_202_ACCEPTED)
     
     def put(self, request, fk, pk, format=None):
-        show=self.get_show(pk=pk)
+        show=self.write_show(pk=pk)
         serializers=ShowDirectorySerializer(show, data=request.data)
         if serializers.is_valid():
             serializers.save()
@@ -110,7 +113,7 @@ class ShowDetail(APIView):
         return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request, fk, pk, format=None):
-        show=self.get_show(pk=pk)
+        show=self.write_show(pk=pk)
         show.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
     

@@ -21,6 +21,7 @@ from Movie import views as MovieViews
 from Theatre import views as TheatreViews
 from Booking import views as BookingViews
 from Users import views as UserViews
+from rest_framework_simplejwt.views import TokenBlacklistView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -40,5 +41,6 @@ urlpatterns = [
     path('login/', UserViews.LoginView.as_view()),
     path('oauth2-login/', UserViews.OAuth2SignupView.as_view()),
     path('auth/', include('social_django.urls', namespace='social')),
+    path('logout/', TokenBlacklistView.as_view(), name='token_blacklist'),
 ]
 urlpatterns=format_suffix_patterns(urlpatterns)
