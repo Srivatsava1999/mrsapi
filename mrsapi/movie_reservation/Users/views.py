@@ -1,18 +1,32 @@
 from django.shortcuts import render
 from social_django.utils import psa, load_backend, load_strategy
-from rest_framework import generics
+from rest_framework import generics, status
+from django.core.cache import cache
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.contrib.auth.hashers import make_password
 from Users.models import UserAccount
 from Users.serializers import UserAccountSerializer
+from Users.authentication import MRSAuthenticationclass
 
 # Create your views here.
+class LogoutView(APIView):
+    permission_classes=[IsAuthenticated]
+    authentication_classes=[JWTAuthentication,MRSAuthenticationclass]
+    def post(self, request, format=None):
+        try:
+            refresh_token=request.data.get("refresh")
+            MRSAuthenticationclass().blacklist_token(refresh_token)
+            return Response(status=status.HTTP_205_RESET_CONTENT, data={"message":"Logged Out"})
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data=super().validate(attrs)

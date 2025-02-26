@@ -12,9 +12,14 @@ from Movie.models import MovieDirectory
 from datetime import datetime, timedelta, time
 from django.utils.timezone import make_aware
 from Users.models import UserAccount
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.permissions import IsAuthenticated
+from Users.authentication import MRSAuthenticationclass
 # Create your views here.
 
 class ShowList(APIView):
+    permission_classes=[IsAuthenticated]
+    authentication_classes=[JWTAuthentication,MRSAuthenticationclass]
     def get(self, request, fk, format=None):
         if "movie" in request.path:
             shows=ShowDirectory.objects.filter(movieId=fk)
@@ -85,6 +90,8 @@ class ShowList(APIView):
             return Response({"error":"Customers can't write shows"}, status=status.HTTP_403_FORBIDDEN)
 
 class ShowDetail(APIView):
+    permission_classes=[IsAuthenticated]
+    authentication_classes=[JWTAuthentication,MRSAuthenticationclass]
     def write_show(self, pk, user):
         try:
             show=ShowDirectory.objects.get(showId=pk)
@@ -118,6 +125,8 @@ class ShowDetail(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
     
 class BookingList(APIView):
+    permission_classes=[IsAuthenticated]
+    authentication_classes=[JWTAuthentication,MRSAuthenticationclass]
     def get(self, request, format=None):
         user=request.user
         if user.role==UserAccount.ADMIN:
@@ -135,6 +144,8 @@ class BookingList(APIView):
         return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class BookingDetail(APIView):
+    permission_classes=[IsAuthenticated]
+    authentication_classes=[JWTAuthentication,MRSAuthenticationclass]
     def get_booking(self, pk, user):
         try:
             booking=BookingDirectory.objects.get(bookingId=pk)

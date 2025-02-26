@@ -8,9 +8,14 @@ from rest_framework import status
 from Theatre.models import TheatreDirectory, ScreenDirectory, SeatMaster
 from Theatre.serializers import TheatreDirectorySerializer, ScreenDirectorySerializer, SeatMasterSerializer
 from Users.models import UserAccount
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.permissions import IsAuthenticated
+from Users.authentication import MRSAuthenticationclass
 
 # Create your views here.
-class TheatreList(APIView):    
+class TheatreList(APIView):
+    permission_classes=[IsAuthenticated]
+    authentication_classes=[JWTAuthentication,MRSAuthenticationclass]   
     def get(self, request, format=None):
         theatres=TheatreDirectory.objects.all()
         serializer=TheatreDirectorySerializer(theatres, many=True)
@@ -27,6 +32,8 @@ class TheatreList(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class TheatreDetail(APIView):
+    permission_classes=[IsAuthenticated]
+    authentication_classes=[JWTAuthentication,MRSAuthenticationclass]
     def write_theatre(self, pk, user):
         try:
             if user.role == UserAccount.ADMIN:
@@ -60,6 +67,8 @@ class TheatreDetail(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 class ScreenList(APIView):
+    permission_classes=[IsAuthenticated]
+    authentication_classes=[JWTAuthentication,MRSAuthenticationclass]
     def get(self, request, fk, format=None):
         screens=ScreenDirectory.objects.filter(theatreId=fk)
         serializer=ScreenDirectorySerializer(screens, many=True)
@@ -79,6 +88,8 @@ class ScreenList(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class ScreenDetail(APIView):
+    permission_classes=[IsAuthenticated]
+    authentication_classes=[JWTAuthentication,MRSAuthenticationclass]
     def write_screen(self, pk, user):
         try:
             if user.role==UserAccount.ADMIN:
@@ -109,6 +120,8 @@ class ScreenDetail(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
     
 class SeatList(APIView):
+    permission_classes=[IsAuthenticated]
+    authentication_classes=[JWTAuthentication,MRSAuthenticationclass]
     def get(self, request, fk, format=None):
         seat_layout=cache.get(f"screen_{fk}")
         if seat_layout:
@@ -173,6 +186,8 @@ class SeatList(APIView):
                  status=status.HTTP_400_BAD_REQUEST)
         
 class SeatDetail(APIView):
+    permission_classes=[IsAuthenticated]
+    authentication_classes=[JWTAuthentication,MRSAuthenticationclass]
     def write_seat(self,pk, user):
         try:
             if user.role==UserAccount.ADMIN:

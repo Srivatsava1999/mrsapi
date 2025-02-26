@@ -6,9 +6,15 @@ from Movie.serializers import MovieDirectorySerializer
 from Movie.models import MovieDirectory
 from django.http import Http404
 from Users.models import UserAccount
+from Users.authentication import MRSAuthenticationclass
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.permissions import IsAuthenticated
+from Users.authentication import MRSAuthenticationclass
 # Create your views here.
 
-class MovieList(APIView):    
+class MovieList(APIView):
+    permission_classes=[IsAuthenticated]
+    authentication_classes=[JWTAuthentication,MRSAuthenticationclass] 
     def get(self, request, format=None):
         movies=MovieDirectory.objects.all()
         serializer=MovieDirectorySerializer(movies, many=True)
@@ -25,6 +31,8 @@ class MovieList(APIView):
             return Response({"error":"Customers can't write movies"}, status=status.HTTP_403_FORBIDDEN)
     
 class MovieDetail(APIView):
+    permission_classes=[IsAuthenticated]
+    authentication_classes=[JWTAuthentication,MRSAuthenticationclass]
     def read_movie(self, pk):
         try:
             return MovieDirectory.objects.get(movieId=pk)
@@ -51,6 +59,7 @@ class MovieDetail(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
     
     def delete(self, request, pk, format=None):
         movie=self.write_movie(pk, request.user)
