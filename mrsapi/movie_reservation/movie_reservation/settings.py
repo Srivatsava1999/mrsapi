@@ -15,7 +15,8 @@ load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY=os.getenv("GOOGLE_OAUTH_CLIENT_ID")
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET=os.getenv("GOOGLE_OAUTH_CLIENT_SECRET")
-
+BASE_APP_URL="http://localhost:3000"
+BASE_API_URL="http://localhost:8000"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 

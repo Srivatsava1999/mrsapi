@@ -1,4 +1,5 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from movie_reservation import settings
 from social_django.utils import psa, load_backend, load_strategy
 from rest_framework import generics, status
 from django.core.cache import cache
@@ -12,9 +13,14 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.contrib.auth.hashers import make_password
 from Users.models import UserAccount
-from Users.serializers import UserAccountSerializer
+from Users.serializers import UserAccountSerializer, AuthSerializer
 from Users.authentication import MRSAuthenticationclass
-
+from urllib.parse import urlencode
+from typing import Dict, Any
+import requests
+GOOGLE_ACCESS_TOKEN_OBTAIN_URL = 'https://oauth2.googleapis.com/token'
+GOOGLE_USER_INFO_URL = 'https://www.googleapis.com/oauth2/v3/userinfo'
+LOGIN_URL = f'{settings.BASE_APP_URL}login/'
 # Create your views here.
 class LogoutView(APIView):
     permission_classes=[IsAuthenticated]
@@ -67,10 +73,43 @@ class RegisterView(generics.CreateAPIView):
     
 class OAuth2SignupView(APIView):
     permission_classes=[AllowAny]
-    # @psa('social:complete')
-    def post(self, request, *args, **kwargs):
-        backend_name=request.data.get('backend')
-        access_token=request.data.get('access_token')
+    def get_user_info(self, access_token) -> Dict[str, Any]:
+        response=requests.get(
+            GOOGLE_USER_INFO_URL,
+            params={"access_token":access_token}
+        )
+        if not response.ok:
+            raise ValidationError('Could not get user info from Google')
+        return response.json()
+
+    def get_access_token(self,validated_data):
+        domain=settings.BASE_API_URL
+        redirect_uri=f'{domain}/oauth2-login/'
+        code=validated_data.get('code')
+        error=validated_data.get('error')
+        if error or not code:
+            params=urlencode({"error":error})
+            return redirect(f'{LOGIN_URL}?{params}')
+        data={
+            "code":code,
+            "client_id":settings.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,
+            "client-secret":settings.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET,
+            "redirect_uri":redirect_uri,
+            "grant_type":"authorization_code"
+        }
+        response=requests.post(GOOGLE_ACCESS_TOKEN_OBTAIN_URL, data=data)
+        if not response.ok:
+            raise ValidationError('could not get access token from google')
+        return response.json()
+    
+    def get(self, request, *args, **kwargs):
+        auth_serializer=AuthSerializer(data=request.GET)
+        auth_serializer.is_valid(raise_exception=True)
+        validated_data=auth_serializer.validated_data
+        token_data=self.get_access_token(validated_data)
+        backend_name=token_data['backend']
+        access_token=token_data['access_token']
+        user_info=self.get_user_info(access_token)
         if not backend_name or not access_token:
             return Response({"error":"Missing backend or access token"}, status=400)
         strategy=load_strategy(request)
@@ -81,9 +120,9 @@ class OAuth2SignupView(APIView):
             return Response({"error": str(e)}, status=400)
         if user:
             user_obj,_= UserAccount.objects.get_or_create(
-                email=user.email,
+                email=user_info.email,
                 defaults={
-                    "name": user.name if hasattr(user, 'name') else "",
+                    "name": user_info.name if hasattr(user, 'name') else "",
                     "role": UserAccount.CUSTOMER,
                     "is_active": True
                 }
@@ -96,3 +135,4 @@ class OAuth2SignupView(APIView):
                 "email":user_obj.email
             })
         return Response({"error":"Invalid OAuth2 token"}, status=400)
+    
