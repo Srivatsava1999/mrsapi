@@ -23,7 +23,7 @@ class TheatreList(APIView):
     
     def post(self, request, format=None):
         user=request.user
-        if user.role != UserAccount.ENTERPRISE or user.role!=UserAccount.ADMIN:
+        if user.role not in [UserAccount.ENTERPRISE,UserAccount.ADMIN]:
             return Response({"error":"Customers can't create theatres"})
         serializer=TheatreDirectorySerializer(data=request.data)
         if serializer.is_valid():
