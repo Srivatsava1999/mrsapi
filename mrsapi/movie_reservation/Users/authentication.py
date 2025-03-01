@@ -17,7 +17,7 @@ class RedisTokenBlacklist:
 class MRSAuthenticationclass(JWTAuthentication, RedisTokenBlacklist):
     def authenticate(self, request):
         try:
-            refresh_token=request.headers.get("X-Refresh-Token")
+            refresh_token=request.data.get("refresh")
             user, validated_token=super().authenticate(request)
             if user:
                 if self.is_blacklist(refresh_token):
