@@ -34,7 +34,7 @@ class ShowList(APIView):
         theatre_id=data.get("theatreId")
         release_date=data.get("releaseDate")
         show_types=data.get("showTypes",[])
-        owner=data.get("owner")
+        owner=request.headers.get("X-User-Id")
         user=UserAccount.objects.get(id=owner)
         if user.role!=UserAccount.CUSTOMER:
             if not all([movie_id, theatre_id, release_date, show_types]):

@@ -23,11 +23,12 @@ class TheatreList(APIView):
     
     def post(self, request, format=None):
         user=request.user
+        owner=request.headers.get("X-User-Id")
         if user.role == UserAccount.CUSTOMER:
             return Response({"error":"Customers can't create theatres"})
         serializer=TheatreDirectorySerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(owner=user)
+            serializer.save(owner=owner)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         print(serializer.errors, request.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -35,12 +36,12 @@ class TheatreList(APIView):
 class TheatreDetail(APIView):
     permission_classes=[IsAuthenticated]
     authentication_classes=[JWTAuthentication,MRSAuthenticationclass]
-    def write_theatre(self, pk, user):
+    def write_theatre(self, pk, user, owner):
         try:
             if user.role == UserAccount.ADMIN:
                 return TheatreDirectory.objects.get(theatreId=pk)
             else:
-                return TheatreDirectory.objects.get(theatreId=pk,owner=user)
+                return TheatreDirectory.objects.get(theatreId=pk,owner=owner)
         except TheatreDirectory.DoesNotExist:
             raise Http404
     def read_theatre(self, pk):
@@ -55,15 +56,17 @@ class TheatreDetail(APIView):
         return Response(serializer.data)
     
     def put(self, request, pk, format=None):
-        theatre=self.write_theatre(pk, request.user)
+        owner=request.headers.get("X-User-Id")
+        theatre=self.write_theatre(pk, request.user, owner)
         serializer=TheatreDirectorySerializer(theatre, data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(owner=owner)
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def delete(self, request, pk, format=None):
-        theatre=self.write_theatre(pk, request.user)
+        owner=request.headers.get("X-User-Id")
+        theatre=self.write_theatre(pk, request.user, owner)
         theatre.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -75,7 +78,7 @@ class ScreenList(APIView):
         serializer=ScreenDirectorySerializer(screens, many=True)
         return Response(serializer.data)
     def post(self, request, fk,format=None):
-        owner=request.data.get("owner")
+        owner=request.headers.get("X-User-Id")
         user=UserAccount.objects.get(id=owner)
         if user.role==UserAccount.CUSTOMER:
             print(user.role,"issue with user class")
@@ -111,13 +114,15 @@ class ScreenDetail(APIView):
         serializer=ScreenDirectorySerializer(screen)
         return Response(serializer.data)
     def put(self, request, pk,fk, format=None):
-        screen=self.write_screen(pk, request.user)
+        owner=request.headers.get("X-User-Id")
+        screen=self.write_screen(pk, request.user, owner)
         serializer=ScreenDirectorySerializer(screen, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(status=status.HTTP_400_BAD_REQUEST)
     def delete(self,request,pk,fk,format=None):
+        owner=request.headers.get("X-User-Id")
         screen=self.write_screen(pk, request.user)
         screen.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
