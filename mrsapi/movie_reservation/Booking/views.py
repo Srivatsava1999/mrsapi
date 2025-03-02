@@ -34,7 +34,9 @@ class ShowList(APIView):
         theatre_id=data.get("theatreId")
         release_date=data.get("releaseDate")
         show_types=data.get("showTypes",[])
-        if data.user.role!=UserAccount.CUSTOMER:
+        owner=data.get("owner")
+        user=UserAccount.objects.get(id=owner)
+        if user.role!=UserAccount.CUSTOMER:
             if not all([movie_id, theatre_id, release_date, show_types]):
                 return Response({"error":"Missing required fields"}, status=status.HTTP_400_BAD_REQUEST)
             
@@ -85,6 +87,10 @@ class ShowList(APIView):
             except MovieDirectory.DoesNotExist:
                 return Response({"error":"Movie not found"}, status=status.HTTP_404_NOT_FOUND)
             except Exception as e:
+                print(new_shows)
+                for show in new_shows:
+                    print(show.movieId_id,show.screenId_id,show.theatreId_id,show.showTypeId_id,show.startTime,show.endTime,show.dateTime,show.houseFullFlag)
+                    # print(show.screenId_id, available_screens)
                 return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
             return Response({"error":"Customers can't write shows"}, status=status.HTTP_403_FORBIDDEN)

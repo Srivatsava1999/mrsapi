@@ -30,7 +30,7 @@ class LogoutView(APIView):
         try:
             refresh_token=request.data.get("refresh")
             MRSAuthenticationclass().blacklist_token(refresh_token)
-            return Response(status=status.HTTP_205_RESET_CONTENT, data={"message":"Logged Out"})
+            return Response(status=status.HTTP_200_OK, data={"message":"Logged Out"})
         except Exception as e:
             return Response({"error": str(e)}, status=400)
 

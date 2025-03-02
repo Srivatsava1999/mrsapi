@@ -75,8 +75,10 @@ class ScreenList(APIView):
         serializer=ScreenDirectorySerializer(screens, many=True)
         return Response(serializer.data)
     def post(self, request, fk,format=None):
-        user=request.user
-        if user.role!=UserAccount.ENTERPRISE or user.role!=UserAccount.ADMIN:
+        owner=request.data.get("owner")
+        user=UserAccount.objects.get(id=owner)
+        if user.role==UserAccount.CUSTOMER:
+            print(user.role,"issue with user class")
             return Response({"error":"Customers can't create screens"}, status=status.HTTP_403_FORBIDDEN)
         serializer=ScreenDirectorySerializer(data=request.data)
         if serializer.is_valid():
