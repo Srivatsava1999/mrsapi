@@ -28,11 +28,12 @@ class LogoutView(APIView):
     authentication_classes=[JWTAuthentication,MRSAuthenticationclass]
     def post(self, request, format=None):
         try:
-            refresh_token=request.data.get("refresh")
+            refresh_token=request.headers.get("refresh")
             MRSAuthenticationclass().blacklist_token(refresh_token)
             return Response(status=status.HTTP_200_OK, data={"message":"Logged Out"})
         except Exception as e:
-            return Response({"error": str(e)}, status=400)
+            print(str(e))
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):

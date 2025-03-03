@@ -143,27 +143,20 @@ class SeatList(APIView):
         rows = round(cap ** 0.5)
         cols = cap // rows
         left_over = cap - (cols * rows)
-
-        premium_rows = rows // 5  # First X rows are premium 
-
-        # Generate seat numbers
+        premium_rows = rows // 5
         seatnums = [[j + 1 for j in range(cols)] for _ in range(rows)]
-
-            # Handle leftover seats
         if left_over < premium_rows:
             for l in range(left_over):
                 seatnums[l].append(cols + 1)
         else:
             seatnums.append([j + 1 for j in range(left_over)])
-
-            # Create SeatMaster compatible list
         seatmaster_objects = []
         seatLayoutDict={}
 
         for i, row in enumerate(seatnums):
-            row_label = chr(65 + i)  # Convert row index to letter (A, B, C, ...)
+            row_label = chr(65 + i)  
             price = 40 if i < premium_rows else 30
-            seat_type = 2 if price == 40 else 1  # Assign seat type based on price
+            seat_type = 2 if price == 40 else 1  
             seatLayoutDict[row_label]=row
             for col_num in row:
                 seatmaster_objects.append(
@@ -172,8 +165,8 @@ class SeatList(APIView):
                         seatRow=row_label,
                         seatCol=col_num,
                         seatPrice=price,
-                        seatTypeId_id=seat_type,  # ForeignKey requires _id suffix
-                        screenId_id=screenId  # ForeignKey requires _id suffix
+                        seatTypeId_id=seat_type, 
+                        screenId_id=screenId  
                     )
                 )
         

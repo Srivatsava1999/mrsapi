@@ -15,6 +15,7 @@ from Users.models import UserAccount
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from Users.authentication import MRSAuthenticationclass
+from movie_reservation.services import Services
 # Create your views here.
 
 class ShowList(APIView):
@@ -33,64 +34,25 @@ class ShowList(APIView):
         movie_id=data.get("movieId")
         theatre_id=data.get("theatreId")
         release_date=data.get("releaseDate")
-        show_types=data.get("showTypes",[])
         owner=request.headers.get("X-User-Id")
         user=UserAccount.objects.get(id=owner)
         if user.role!=UserAccount.CUSTOMER:
-            if not all([movie_id, theatre_id, release_date, show_types]):
+            if not all([movie_id, theatre_id, release_date]):
                 return Response({"error":"Missing required fields"}, status=status.HTTP_400_BAD_REQUEST)
             
             try:
-                release_date=datetime.strptime(release_date, "%Y-%m-%d").date()
-                release_date=make_aware(datetime.combine(release_date, datetime.min.time()))
-                movie=MovieDirectory.objects.get(movieId=movie_id)
-                runtime_minutes=int(movie.duration)
-                movie_duration=timedelta(minutes=runtime_minutes)
-                unavailable_screens = ShowDirectory.objects.filter(dateTime=release_date).values_list('screenId_id', flat=True)
-
-                available_screens=ScreenDirectory.objects.filter(theatreId=theatre_id).exclude(
-                    screenId__in=unavailable_screens
+                result=Services.show_schedular(
+                    movie_id=movie_id,
+                    theatre_id=theatre_id,
+                    release_date=release_date
                 )
-                if not available_screens.exists():
-                    return Response({"error":"No available screens for scheduling"},status=status.HTTP_400_BAD_REQUEST)
-                
-                initia_time=time(9,0)
-                buffer_time=timedelta(minutes=15)
-
-                new_shows=[]
-                current_time=datetime.combine(datetime.today(), initia_time)
-                for show_type_id in show_types:
-                    start_time=current_time.time()
-                    end_time=(current_time+movie_duration).time()
-
-                    if end_time>=time(23,50):
-                        break
-
-                    new_show=ShowDirectory(
-                        movieId_id=movie_id,
-                        screenId=available_screens[0],
-                        theatreId_id=theatre_id,
-                        showTypeId_id=show_type_id,
-                        startTime=start_time,
-                        endTime=end_time,
-                        dateTime=release_date,
-                        houseFullFlag=False
-                    )
-                    new_shows.append(new_show)
-                    current_time+=movie_duration+buffer_time
-                
-                with transaction.atomic():
-                    ShowDirectory.objects.bulk_create(new_shows)
-                
-                return Response({"message": "Shows scheduled successfully"}, status=status.HTTP_201_CREATED)
-            
+                if "error" in result:
+                    return Response(result, status=status.HTTP_400_BAD_REQUEST)
+                return Response(result, status=status.HTTP_201_CREATED)
             except MovieDirectory.DoesNotExist:
                 return Response({"error":"Movie not found"}, status=status.HTTP_404_NOT_FOUND)
             except Exception as e:
-                print(new_shows)
-                for show in new_shows:
-                    print(show.movieId_id,show.screenId_id,show.theatreId_id,show.showTypeId_id,show.startTime,show.endTime,show.dateTime,show.houseFullFlag)
-                    # print(show.screenId_id, available_screens)
+                print(str(e))
                 return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
             return Response({"error":"Customers can't write shows"}, status=status.HTTP_403_FORBIDDEN)
