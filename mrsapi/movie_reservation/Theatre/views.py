@@ -22,13 +22,13 @@ class TheatreList(APIView):
         return Response(serializer.data)
     
     def post(self, request, format=None):
-        user=request.user
-        owner=request.headers.get("X-User-Id")
+        userId=request.headers.get("X-User-Id")
+        user=UserAccount.objects.get(id=userId)
         if user.role == UserAccount.CUSTOMER:
             return Response({"error":"Customers can't create theatres"})
         serializer=TheatreDirectorySerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(owner=owner)
+            serializer.save(owner=user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         print(serializer.errors, request.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
