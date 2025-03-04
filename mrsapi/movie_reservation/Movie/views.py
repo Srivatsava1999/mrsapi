@@ -8,10 +8,28 @@ from django.http import Http404
 from Users.models import UserAccount
 from Users.authentication import MRSAuthenticationclass
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from Users.authentication import MRSAuthenticationclass
 # Create your views here.
+class MovieViewAll(APIView):
+    permission_classes=[AllowAny]
+    def get(self, request, format=None):
+        movies=MovieDirectory.objects.all()
+        serializer=MovieDirectorySerializer(movies, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
+class MovieViewSpecific(APIView):
+    permission_classes=[AllowAny]
+    def read_movie(self, pk):
+        try:
+            return MovieDirectory.objects.get(movieId=pk)
+        except MovieDirectory.DoesNotExist:
+            raise Http404
+    def get(self, request, pk, format=None):
+        movie=self.read_movie(pk)
+        serializer=MovieDirectorySerializer(movie)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+        
 class MovieList(APIView):
     permission_classes=[IsAuthenticated]
     authentication_classes=[JWTAuthentication,MRSAuthenticationclass] 

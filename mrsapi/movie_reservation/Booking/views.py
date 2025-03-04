@@ -13,10 +13,39 @@ from datetime import datetime, timedelta, time
 from django.utils.timezone import make_aware
 from Users.models import UserAccount
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from Users.authentication import MRSAuthenticationclass
 from movie_reservation.services import Services
 # Create your views here.
+class ShowViewAll(APIView):
+    permission_classes=[AllowAny]
+    def get(self, request, fk, format=None):
+        shows=ShowDirectory.objects.all()
+        serializers=ShowDirectorySerializer(shows, many=True)
+        return Response(serializers.data, status=status.HTTP_200_OK)
+
+class ShowViewBy(APIView):
+    permission_classes=[AllowAny]
+    def get(self, request, fk, format=None):
+        if "movie" in request.path:
+            shows=ShowDirectory.objects.filter(movieId=fk)
+        elif "theatre" in request.path:
+            shows=ShowDirectory.objects.filter(theatreId=fk)
+        serializers=ShowDirectorySerializer(shows, many=True)
+        return Response(serializers.data, status=status.HTTP_200_OK) 
+
+class ShowViewSpecific(APIView):
+    permission_classes=[AllowAny]
+    def read_show(self, pk):
+        try:
+            return ShowDirectory.objects.get(showId=pk)
+        except ShowDirectory.DoesNotExist:
+            raise Http404
+        
+    def get(self, request, pk, format=None):
+        show=self.read_show(pk)
+        serializer=ShowDirectorySerializer(show)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class ShowList(APIView):
     permission_classes=[IsAuthenticated]

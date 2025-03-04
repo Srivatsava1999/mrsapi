@@ -14,7 +14,7 @@ urlpatterns = [
     path('theatres/',TheatreViews.TheatreList.as_view()),
     path('theatres/<int:pk>/',TheatreViews.TheatreDetail.as_view()),
     path('theatre/<int:fk>/screen/', TheatreViews.ScreenList.as_view()),
-    path('theatre/<int:fk>/screen/<int:pk>/',TheatreViews.ScreenDetail.as_view()),
+    path('screen/<int:pk>/',TheatreViews.ScreenDetail.as_view()),
     path('screen/<int:fk>/seats/',TheatreViews.SeatList.as_view()),
     path('screen/<int:fk>/seats/<int:pk>',TheatreViews.SeatDetail.as_view()),
     path('theatre/<int:fk>/show/', BookingViews.ShowList.as_view()), # Bulk GET or POST(showschedularservice running) Request if the request shows by theatre
@@ -27,5 +27,16 @@ urlpatterns = [
     path('auth/', include('social_django.urls', namespace='social')),
     path('logout/', UserViews.LogoutView.as_view(), name='token_blacklist'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh' ),
+    # paths for unauthenticated users
+    path('theatresall/', TheatreViews.TheatreViewAll.as_view()),
+    path('theatresall/<int:pk>/', TheatreViews.TheatreViewSpecific.as_view()),
+    path('theatresall/<int:fk>/showall/', BookingViews.ShowViewAll.as_view()),
+    path('theatresall/<int:fk>/showall/<int:pk>', BookingViews.ShowViewSpecific.as_view()),
+    path('screensall/<int:fk>/', TheatreViews.ScreenViewAll.as_view()),
+    path('screensall/<int:fk>/seats/', TheatreViews.AudiView.as_view()),
+    path('moviesall/', MovieViews.MovieViewAll.as_view()),
+    path('movieall/<int:pk>/', MovieViews.MovieViewSpecific.as_view()),
+    path('movieall/<int:fk>/showall/', BookingViews.ShowViewAll.as_view()),
+    path('movieall/<int:fk>/showall/<int:pk>/', BookingViews.ShowViewSpecific.as_view()),
 ]
 urlpatterns=format_suffix_patterns(urlpatterns)

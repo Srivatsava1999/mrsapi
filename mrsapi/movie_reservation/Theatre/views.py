@@ -9,15 +9,54 @@ from Theatre.models import TheatreDirectory, ScreenDirectory, SeatMaster
 from Theatre.serializers import TheatreDirectorySerializer, ScreenDirectorySerializer, SeatMasterSerializer
 from Users.models import UserAccount
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from Users.authentication import MRSAuthenticationclass
 
 # Create your views here.
+class TheatreViewAll(APIView):
+    permission_classes=[AllowAny]
+    def get(self, request, format=None):
+        theatres=TheatreDirectory.objects.all()
+        serializer=TheatreDirectorySerializer(theatres, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class TheatreViewSpecific(APIView):
+    permission_classes=[AllowAny]
+    def read_theatre(self, pk):
+        try:
+            return TheatreDirectory.objects.get(theatreId=pk)
+        except TheatreDirectory.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk, format=None):
+        theatre=self.read_theatre(pk)
+        serializer=TheatreDirectorySerializer(theatre, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class ScreenViewAll(APIView):
+    permission_classes=[AllowAny]
+    def get(self, request, fk, format=None):
+        screens=ScreenDirectory.objects.filter(theatreId=fk)
+        serializer=ScreenDirectorySerializer(screens, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class AudiView(APIView):
+    permission_classes=[AllowAny]
+    def get(self, request, fk, format=None):
+        seat_layout=cache.get(f"screen_{fk}")
+        if seat_layout:
+            return Response({"screenId": fk, "seat_layout": seat_layout}, status=status.HTTP_200_OK)
+        seats=SeatMaster.objects.filter(screenId=fk)
+        serializer=SeatMasterSerializer(seats, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 class TheatreList(APIView):
     permission_classes=[IsAuthenticated]
     authentication_classes=[JWTAuthentication,MRSAuthenticationclass]   
     def get(self, request, format=None):
-        theatres=TheatreDirectory.objects.all()
+        owner=UserAccount.objects.get(id=request.headers.get("X-User-Id"))
+        theatres=TheatreDirectory.objects.filter(owner=owner)
         serializer=TheatreDirectorySerializer(theatres, many=True)
         return Response(serializer.data)
     
@@ -42,11 +81,6 @@ class TheatreDetail(APIView):
                 return TheatreDirectory.objects.get(theatreId=pk)
             else:
                 return TheatreDirectory.objects.get(theatreId=pk,owner=owner)
-        except TheatreDirectory.DoesNotExist:
-            raise Http404
-    def read_theatre(self, pk):
-        try:
-            return TheatreDirectory.objects.get(theatreId=pk)
         except TheatreDirectory.DoesNotExist:
             raise Http404
     
@@ -96,26 +130,24 @@ class ScreenList(APIView):
 class ScreenDetail(APIView):
     permission_classes=[IsAuthenticated]
     authentication_classes=[JWTAuthentication,MRSAuthenticationclass]
-    def write_screen(self, pk, user):
+    def get_screen(self, pk, user):
         try:
             if user.role==UserAccount.ADMIN:
                 return ScreenDirectory.objects.get(screenId=pk)
             return ScreenDirectory.objects.get(screenId=pk, theatreId__owner=user)
         except ScreenDirectory.DoesNotExist:
             raise Http404
-    def read_screen(self, pk):
-        try:
-            return ScreenDirectory.objects.get(screenId=pk)
-        except:
-            raise Http404
     
     def get(self, request, pk, fk, format=None):
-        screen=self.read_screen(pk)
+        user_id=request.headers.get("X-User-Id")
+        owner=UserAccount.object.get(id=user_id)
+        screen=self.get_screen(pk, owner)
         serializer=ScreenDirectorySerializer(screen)
         return Response(serializer.data)
     def put(self, request, pk,fk, format=None):
-        owner=request.headers.get("X-User-Id")
-        screen=self.write_screen(pk, request.user, owner)
+        user_id=request.headers.get("X-User-Id")
+        owner=UserAccount.object.get(id=user_id)
+        screen=self.get_screen(pk, request.user, owner)
         serializer=ScreenDirectorySerializer(screen, data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -123,7 +155,7 @@ class ScreenDetail(APIView):
         return Response(status=status.HTTP_400_BAD_REQUEST)
     def delete(self,request,pk,fk,format=None):
         owner=request.headers.get("X-User-Id")
-        screen=self.write_screen(pk, request.user)
+        screen=self.get_screen(pk, request.user)
         screen.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
     
