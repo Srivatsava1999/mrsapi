@@ -20,7 +20,7 @@ from movie_reservation.services import Services
 class ShowViewAll(APIView):
     permission_classes=[AllowAny]
     def get(self, request, fk, format=None):
-        shows=ShowDirectory.objects.all()
+        shows=ShowDirectory.objects.select_related('movieId', 'theatreId').all()
         serializers=ShowDirectorySerializer(shows, many=True)
         return Response(serializers.data, status=status.HTTP_200_OK)
 
@@ -28,9 +28,9 @@ class ShowViewBy(APIView):
     permission_classes=[AllowAny]
     def get(self, request, fk, format=None):
         if "movie" in request.path:
-            shows=ShowDirectory.objects.filter(movieId=fk)
+            shows=ShowDirectory.objects.select_related('movieId','theatreId').filter(movieId=fk)
         elif "theatre" in request.path:
-            shows=ShowDirectory.objects.filter(theatreId=fk)
+            shows=ShowDirectory.objects.select_related('movieId','theatreId').filter(theatreId=fk)
         serializers=ShowDirectorySerializer(shows, many=True)
         return Response(serializers.data, status=status.HTTP_200_OK) 
 
@@ -38,7 +38,7 @@ class ShowViewSpecific(APIView):
     permission_classes=[AllowAny]
     def read_show(self, pk):
         try:
-            return ShowDirectory.objects.get(showId=pk)
+            return ShowDirectory.objects.select_related('movieId','theatreId').get(showId=pk)
         except ShowDirectory.DoesNotExist:
             raise Http404
         
@@ -52,9 +52,9 @@ class ShowList(APIView):
     authentication_classes=[JWTAuthentication,MRSAuthenticationclass]
     def get(self, request, fk, format=None):
         if "movie" in request.path:
-            shows=ShowDirectory.objects.filter(movieId=fk)
+            shows=ShowDirectory.objects.select_related('movieId','theatreId').filter(movieId=fk)
         elif "theatre" in request.path:
-            shows=ShowDirectory.objects.filter(theatreId=fk)
+            shows=ShowDirectory.objects.select_related('movieId','theatreId').filter(theatreId=fk)
         serializers=ShowDirectorySerializer(shows, many=True)
         return Response(serializers.data, status=status.HTTP_200_OK)
     
@@ -99,7 +99,7 @@ class ShowDetail(APIView):
             raise Http404
     def read_show(self, pk):
         try:
-            return ShowDirectory.objects.get(showId=pk)
+            return ShowDirectory.objects.select_related('movieId','theatreId').get(showId=pk)
         except ShowDirectory.DoesNotExist:
             raise Http404
     

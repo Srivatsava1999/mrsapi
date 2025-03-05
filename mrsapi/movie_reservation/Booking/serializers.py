@@ -13,9 +13,18 @@ class ShowDirectorySerializer(serializers.ModelSerializer):
     screenId=serializers.PrimaryKeyRelatedField(queryset=ScreenDirectory.objects.all())
     theatreId=serializers.PrimaryKeyRelatedField(queryset=TheatreDirectory.objects.all())
     showTypeId=serializers.PrimaryKeyRelatedField(queryset=ShowDirectory.objects.all())
+    movieTitle=serializers.CharField(source='movieId.movieTitle')
+    duration=serializers.CharField(source='movieId.duration')
+    rating=serializers.CharField(source='movieId.rating')
+    theatreName=serializers.CharField(source='theatreId.theatreName')
+    address=serializers.CharField(source='theatreId.address')
+    locationCity=serializers.CharField(source='theatreId.locationCity')
+    locationState=serializers.CharField(source='theatreId.locationState')
     class Meta:
         model=ShowDirectory
-        fields='__all__'
+        fields='__all__' + [
+            'movieTitle', 'duration', 'rating', 'theatreName', 'address', 'locationCity', 'locationState'
+        ]
 
 class BookingDirectorySerializer(serializers.ModelSerializer):
     showId=serializers.PrimaryKeyRelatedField(queryset=ShowDirectory.objects.all())
