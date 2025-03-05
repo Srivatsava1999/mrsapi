@@ -102,13 +102,13 @@ class OAuth2SignupView(APIView):
         data={
             "code":code,
             "client_id":settings.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,
-            "client-secret":settings.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET,
+            "client_secret":settings.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET,
             "redirect_uri":redirect_uri,
             "grant_type":"authorization_code"
         }
         response=requests.post(GOOGLE_ACCESS_TOKEN_OBTAIN_URL, data=data)
         if not response.ok:
-            raise ValidationError('could not get access token from google')
+            raise ValidationError(redirect_uri,'could not get access token from google')
         return response.json()
     
     def get(self, request, *args, **kwargs):
@@ -116,11 +116,12 @@ class OAuth2SignupView(APIView):
         auth_serializer.is_valid(raise_exception=True)
         validated_data=auth_serializer.validated_data
         token_data=self.get_access_token(validated_data)
-        backend_name=token_data['backend']
+        backend_name='google-oauth2'
         access_token=token_data['access_token']
-        user_info=self.get_user_info(access_token)
-        if not backend_name or not access_token:
+        if not access_token:
             return Response({"error":"Missing backend or access token"}, status=400)
+        user_info=self.get_user_info(access_token)
+        # print(user_info)
         strategy=load_strategy(request)
         backend=load_backend(strategy, backend_name, redirect_uri=None)
         try:
@@ -129,19 +130,21 @@ class OAuth2SignupView(APIView):
             return Response({"error": str(e)}, status=400)
         if user:
             user_obj,_= UserAccount.objects.get_or_create(
-                email=user_info.email,
+                email=user_info['email'],
                 defaults={
-                    "name": user_info.name if hasattr(user, 'name') else "",
+                    "name": user_info['name'] if hasattr(user, 'name') else "",
                     "role": UserAccount.CUSTOMER,
                     "is_active": True
                 }
             )
             refresh=RefreshToken.for_user(user_obj)
-            return Response({
+            frontend_url=f'{settings.BASE_APP_URL}/oauth2-success/'
+            params=urlencode({
                 "refresh":str(refresh),
                 "access":str(refresh.access_token),
                 "user_id":user_obj.id,
                 "email":user_obj.email
             })
+            return redirect(f"{frontend_url}?{params}")
         return Response({"error":"Invalid OAuth2 token"}, status=400)
     
