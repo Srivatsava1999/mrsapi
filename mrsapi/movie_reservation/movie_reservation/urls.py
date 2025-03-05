@@ -31,13 +31,13 @@ urlpatterns = [
     path('theatresall/', TheatreViews.TheatreViewAll.as_view()),
     path('theatresall/<int:pk>/', TheatreViews.TheatreViewSpecific.as_view()),
     path('theatresall/<int:fk>/showall/', BookingViews.ShowViewBy.as_view()),
-    path('theatresall/<int:fk>/showall/<int:pk>', BookingViews.ShowViewSpecific.as_view()),
+    path('get-show/<int:pk>/', BookingViews.ShowViewSpecific.as_view()),
     path('screensall/<int:fk>/', TheatreViews.ScreenViewAll.as_view()),
     path('screensall/<int:fk>/seats/', TheatreViews.AudiView.as_view()),
     path('moviesall/', MovieViews.MovieViewAll.as_view()),
     path('movieall/<int:pk>/', MovieViews.MovieViewSpecific.as_view()),
     path('movieall/<int:fk>/showall/', BookingViews.ShowViewBy.as_view()),
-    path('movieall/<int:fk>/showall/<int:pk>/', BookingViews.ShowViewSpecific.as_view()),
     path('showsall/', BookingViews.ShowViewAll.as_view()),
+    path('show/<int:fk>/seats/', TheatreViews.AudiView.as_view()),
 ]
 urlpatterns=format_suffix_patterns(urlpatterns)

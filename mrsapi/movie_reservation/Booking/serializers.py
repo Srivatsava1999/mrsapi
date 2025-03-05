@@ -22,7 +22,8 @@ class ShowDirectorySerializer(serializers.ModelSerializer):
     locationState=serializers.CharField(source='theatreId.locationState')
     class Meta:
         model=ShowDirectory
-        fields='__all__' + [
+        fields=[
+            'showId','movieId','screenId','theatreId','showTypeId','startTime','endTime','dateTime','houseFullFlag',
             'movieTitle', 'duration', 'rating', 'theatreName', 'address', 'locationCity', 'locationState'
         ]
 

@@ -27,9 +27,9 @@ class ShowViewAll(APIView):
 class ShowViewBy(APIView):
     permission_classes=[AllowAny]
     def get(self, request, fk, format=None):
-        if "movie" in request.path:
+        if "movieall" in request.path:
             shows=ShowDirectory.objects.select_related('movieId','theatreId').filter(movieId=fk)
-        elif "theatre" in request.path:
+        elif "theatresall" in request.path:
             shows=ShowDirectory.objects.select_related('movieId','theatreId').filter(theatreId=fk)
         serializers=ShowDirectorySerializer(shows, many=True)
         return Response(serializers.data, status=status.HTTP_200_OK) 
@@ -43,6 +43,7 @@ class ShowViewSpecific(APIView):
             raise Http404
         
     def get(self, request, pk, format=None):
+        print(pk)
         show=self.read_show(pk)
         serializer=ShowDirectorySerializer(show)
         return Response(serializer.data, status=status.HTTP_200_OK)
