@@ -32,7 +32,6 @@ class LogoutView(APIView):
             MRSAuthenticationclass().blacklist_token(refresh_token)
             return Response(status=status.HTTP_200_OK, data={"message":"Logged Out"})
         except Exception as e:
-            print(str(e))
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -108,7 +107,7 @@ class OAuth2SignupView(APIView):
         }
         response=requests.post(GOOGLE_ACCESS_TOKEN_OBTAIN_URL, data=data)
         if not response.ok:
-            raise ValidationError(redirect_uri,'could not get access token from google')
+            raise ValidationError('could not get access token from google')
         return response.json()
     
     def get(self, request, *args, **kwargs):
@@ -121,7 +120,6 @@ class OAuth2SignupView(APIView):
         if not access_token:
             return Response({"error":"Missing backend or access token"}, status=400)
         user_info=self.get_user_info(access_token)
-        # print(user_info)
         strategy=load_strategy(request)
         backend=load_backend(strategy, backend_name, redirect_uri=None)
         try:
