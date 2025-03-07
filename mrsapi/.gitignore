@@ -1,4 +1,3 @@
-# Ignore Python site-packages and cache files
 mrsapi/lib/python3.11/site-packages/
 *.pyc
 __pycache__/

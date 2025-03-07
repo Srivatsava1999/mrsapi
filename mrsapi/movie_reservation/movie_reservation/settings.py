@@ -4,32 +4,32 @@ import os
 from dotenv import load_dotenv
 from datetime import timedelta
 from corsheaders.defaults import default_headers
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
 load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY=os.getenv("GOOGLE_OAUTH_CLIENT_ID")
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET=os.getenv("GOOGLE_OAUTH_CLIENT_SECRET")
 BASE_APP_URL=os.getenv("BASE_APP_URL")
 BASE_API_URL=os.getenv("BASE_API_URL")
-# SECURITY WARNING: don't run with debug turned on in production!
+SQL_ENGINE=os.getenv("SQL_ENGINE")
+SQL_NAME=os.getenv("SQL_NAME")
+SQL_USER= os.getenv("SQL_USER")
+SQL_PASSWORD=os.getenv("SQL_PASSWORD")
+SQL_HOST=os.getenv("SQL_HOST")
+SQL_PORT=os.getenv("SQL_PORT")
+CACHE_BACKEND=os.getenv("CACHE_BACKEND")
+CACHE_LOCATION=os.getenv("CACHE_LOCATION")
 DEBUG = True
 
 ALLOWED_HOSTS = []
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # React's development server
+    "http://localhost:3000", 
 ]
 
 
 
-# Application definition
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -104,13 +104,15 @@ TEMPLATES = [
 WSGI_APPLICATION = 'movie_reservation.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': SQL_ENGINE,
+        'NAME': SQL_NAME,
+        'USER': SQL_USER,
+        'PASSWORD': SQL_PASSWORD,
+        'HOST': SQL_HOST,
+        'PORT': SQL_PORT,
     }
 }
 CACHES = {
@@ -126,8 +128,6 @@ CACHES = {
     }
 }
 
-# Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -145,8 +145,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/5.1/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
 
@@ -157,12 +155,8 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
