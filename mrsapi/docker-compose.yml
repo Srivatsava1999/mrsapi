@@ -27,6 +27,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: mrsapi_container
+    command: gunicorn movie_reservation.wsgi:application --bind 0.0.0.0:8000
     restart: always
     ports:
       - 8000:8000
